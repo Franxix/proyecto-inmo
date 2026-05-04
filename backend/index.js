@@ -5,7 +5,7 @@ const app = express()
 const prisma = new PrismaClient()
 
 app.use(express.json())
-
+const { propiedadSchema } = require('./validaciones')
 const authRoutes = require('./auth')
 app.use('/api/auth', authRoutes)
 const verificarToken = require('./middleware')
@@ -36,16 +36,20 @@ app.get('/api/properties', async (req, res) => {
 
 // Crear una propiedad
 app.post('/api/properties', verificarToken, async (req, res) => {
- try {
+  try {
+    const datos = propiedadSchema.parse(req.body)
     const propiedad = await prisma.propiedad.create({
       data: {
-        ...req.body,
+        ...datos,
         usuario_id: req.usuario.id
       }
     })
     res.json(propiedad)
   } catch (error) {
-    res.status(500).json({ error: 'Error al crear propiedad' })
+   if (error.name === 'ZodError') {
+  return res.status(400).json({ errores: error.issues.map(e => e.message) })
+   }
+  res.status(500).json({ error: 'Error al crear propiedad' })
   }
 })
 
