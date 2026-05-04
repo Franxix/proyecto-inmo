@@ -2,6 +2,7 @@ const express = require('express')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { PrismaClient } = require('@prisma/client')
+const { usuarioSchema, loginSchema } = require('./validaciones')
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -11,7 +12,7 @@ const SECRET = 'proyecto_inmo_secret_key'
 // Registro
 router.post('/register', async (req, res) => {
   try {
-    const { nombre, email, password, tipo, telefono } = req.body
+    const { nombre, email, password, tipo, telefono } = usuarioSchema.parse(req.body)
 
     const usuarioExiste = await prisma.usuario.findUnique({
       where: { email }
@@ -28,13 +29,16 @@ router.post('/register', async (req, res) => {
         nombre,
         email,
         password: passwordEncriptada,
-        tipo: tipo || 'particular',
+        tipo,
         telefono
       }
     })
 
     res.json({ mensaje: 'Usuario registrado correctamente', id: usuario.id })
   } catch (error) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ errores: error.issues.map(e => e.message) })
+    }
     res.status(500).json({ error: error.message })
   }
 })
@@ -42,7 +46,7 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email, password } = loginSchema.parse(req.body)
 
     const usuario = await prisma.usuario.findUnique({
       where: { email }
@@ -66,6 +70,9 @@ router.post('/login', async (req, res) => {
 
     res.json({ token, nombre: usuario.nombre })
   } catch (error) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ errores: error.issues.map(e => e.message) })
+    }
     res.status(500).json({ error: 'Error al iniciar sesión' })
   }
 })
