@@ -36,8 +36,13 @@ app.get('/api/properties', async (req, res) => {
 
 // Crear una propiedad
 app.post('/api/properties', verificarToken, async (req, res) => {
-  try {
-    const propiedad = await prisma.propiedad.create({ data: req.body })
+ try {
+    const propiedad = await prisma.propiedad.create({
+      data: {
+        ...req.body,
+        usuario_id: req.usuario.id
+      }
+    })
     res.json(propiedad)
   } catch (error) {
     res.status(500).json({ error: 'Error al crear propiedad' })
@@ -48,8 +53,18 @@ app.post('/api/properties', verificarToken, async (req, res) => {
 app.get('/api/properties/:id', async (req, res) => {
   try {
     const propiedad = await prisma.propiedad.findUnique({
-      where: { id: Number(req.params.id) }
-    })
+  where: { id: Number(req.params.id) },
+  include: {
+    usuario: {
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        telefono: true
+      }
+    }
+  }
+})
     if (!propiedad) return res.status(404).json({ error: 'Propiedad no encontrada' })
     res.json(propiedad)
   } catch (error) {
