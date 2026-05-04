@@ -8,6 +8,7 @@ app.use(express.json())
 
 const authRoutes = require('./auth')
 app.use('/api/auth', authRoutes)
+const verificarToken = require('./middleware')
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
@@ -34,7 +35,7 @@ app.get('/api/properties', async (req, res) => {
 })
 
 // Crear una propiedad
-app.post('/api/properties', async (req, res) => {
+app.post('/api/properties', verificarToken, async (req, res) => {
   try {
     const propiedad = await prisma.propiedad.create({ data: req.body })
     res.json(propiedad)
@@ -57,7 +58,7 @@ app.get('/api/properties/:id', async (req, res) => {
 })
 
 // Editar una propiedad
-app.put('/api/properties/:id', async (req, res) => {
+app.put('/api/properties/:id', verificarToken, async (req, res) => {
   try {
     const propiedad = await prisma.propiedad.update({
       where: { id: Number(req.params.id) },
@@ -70,7 +71,7 @@ app.put('/api/properties/:id', async (req, res) => {
 })
 
 // Eliminar una propiedad
-app.delete('/api/properties/:id', async (req, res) => {
+app.delete('/api/properties/:id', verificarToken, async (req, res) => {
   try {
     await prisma.propiedad.delete({ where: { id: Number(req.params.id) } })
     res.json({ mensaje: 'Propiedad eliminada correctamente' })
