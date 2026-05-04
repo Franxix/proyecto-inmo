@@ -26,4 +26,17 @@ model Propiedad {
   fotos            String[]
   disponible       Boolean  @default(true)
   creado_en        DateTime @default(now())
+  usuario_id     Int?
+  usuario        Usuario?    @relation(fields: [usuario_id], references: [id])
+}
+
+model Usuario {
+  id             Int         @id @default(autoincrement())
+  nombre         String
+  email          String      @unique
+  password       String
+  tipo           String      @default("particular")
+  telefono       String?
+  creado_en      DateTime    @default(now())
+  propiedades    Propiedad[]
 }
