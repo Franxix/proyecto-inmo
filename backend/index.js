@@ -53,6 +53,18 @@ app.post('/api/properties', verificarToken, async (req, res) => {
   }
 })
 
+// Propiedades del usuario logueado
+app.get('/api/properties/me', verificarToken, async (req, res) => {
+  try {
+    const propiedades = await prisma.propiedad.findMany({
+      where: { usuario_id: req.usuario.id }
+    })
+    res.json(propiedades)
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener propiedades' })
+  }
+})
+
 // Traer una propiedad por ID
 app.get('/api/properties/:id', async (req, res) => {
   try {
