@@ -91,8 +91,16 @@ app.get('/api/properties/:id', async (req, res) => {
 // Editar una propiedad
 app.put('/api/properties/:id', verificarToken, async (req, res) => {
   try {
+    const id = Number(req.params.id)
+    const existente = await prisma.propiedad.findUnique({ where: { id } })
+    if (!existente) {
+      return res.status(404).json({ error: 'Propiedad no encontrada' })
+    }
+    if (existente.usuario_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'No tenés permiso para modificar esta propiedad' })
+    }
     const propiedad = await prisma.propiedad.update({
-      where: { id: Number(req.params.id) },
+      where: { id },
       data: req.body
     })
     res.json(propiedad)
@@ -104,7 +112,15 @@ app.put('/api/properties/:id', verificarToken, async (req, res) => {
 // Eliminar una propiedad
 app.delete('/api/properties/:id', verificarToken, async (req, res) => {
   try {
-    await prisma.propiedad.delete({ where: { id: Number(req.params.id) } })
+    const id = Number(req.params.id)
+    const existente = await prisma.propiedad.findUnique({ where: { id } })
+    if (!existente) {
+      return res.status(404).json({ error: 'Propiedad no encontrada' })
+    }
+    if (existente.usuario_id !== req.usuario.id) {
+      return res.status(403).json({ error: 'No tenés permiso para modificar esta propiedad' })
+    }
+    await prisma.propiedad.delete({ where: { id } })
     res.json({ mensaje: 'Propiedad eliminada correctamente' })
   } catch (error) {
     res.status(500).json({ error: 'Error al eliminar propiedad' })
