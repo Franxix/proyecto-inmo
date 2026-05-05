@@ -9,6 +9,7 @@ const { propiedadSchema } = require('./validaciones')
 const authRoutes = require('./auth')
 app.use('/api/auth', authRoutes)
 const verificarToken = require('./middleware')
+const { upload, subirImagen } = require('./upload')
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
@@ -124,6 +125,19 @@ app.delete('/api/properties/:id', verificarToken, async (req, res) => {
     res.json({ mensaje: 'Propiedad eliminada correctamente' })
   } catch (error) {
     res.status(500).json({ error: 'Error al eliminar propiedad' })
+  }
+})
+
+// Subir imagen (Cloudinary)
+app.post('/api/upload', verificarToken, upload.single('foto'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Archivo requerido' })
+    }
+    const url = await subirImagen(req.file.buffer)
+    res.json({ url })
+  } catch (error) {
+    res.status(500).json({ error: 'Error al subir imagen' })
   }
 })
 
